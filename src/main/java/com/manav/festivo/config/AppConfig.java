@@ -4,6 +4,7 @@ import com.manav.festivo.security.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -36,9 +37,15 @@ public class AppConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // No sessions
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/signup", "/api/users/login").permitAll() // Public endpoints
-                        .requestMatchers("/api/service-providers/**").hasAnyRole("SERVICE_PROVIDER", "ADMIN") // Service provider endpoints
-                        .requestMatchers("/api/users/**").hasRole("ADMIN") // Admin-only endpoints (except signup/login)
+                        .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated() // Allow authenticated users to view (ownership enforced at controller)
+                        .requestMatchers(HttpMethod.PUT, "/api/users/**").authenticated() // Allow authenticated users to update (ownership enforced at controller)
+                        .requestMatchers("/api/users/**").hasRole("ADMIN") // All other user operations restricted to ADMIN
+                        // Service provider endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/service-providers/**").hasAnyRole("CUSTOMER", "SERVICE_PROVIDER", "ADMIN") // Allow viewing for all roles
+                        .requestMatchers(HttpMethod.POST, "/api/service-providers/**").hasAnyRole("SERVICE_PROVIDER", "ADMIN") // Allow creation for SERVICE_PROVIDER and ADMIN
+                        .requestMatchers(HttpMethod.PUT, "/api/service-providers/**").hasAnyRole("SERVICE_PROVIDER", "ADMIN") // Allow updates for SERVICE_PROVIDER and ADMIN
+                        .requestMatchers(HttpMethod.DELETE, "/api/service-providers/**").hasAnyRole("SERVICE_PROVIDER", "ADMIN") // Allow deletion for SERVICE_PROVIDER and ADMIN
                         .anyRequest().authenticated() // All other endpoints require authentication
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter

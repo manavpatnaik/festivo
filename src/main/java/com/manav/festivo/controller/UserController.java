@@ -32,9 +32,8 @@ public class UserController {
     public ResponseEntity<User> signUp(@Valid @RequestBody UserCreationDTO userCreationDTO) {
         System.out.println("UserController.signUp: " + userCreationDTO);
         User user = userCreationDTO.toUser();
-        user = userService.createUser(user);
-        System.out.println("UserController.signUp: " + user);
-        return new ResponseEntity<>(user, HttpStatus.CREATED);
+        User createdUser = userService.createUser(user);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")

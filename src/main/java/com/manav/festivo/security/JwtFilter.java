@@ -36,15 +36,19 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            System.out.println(email + " - " + role);
             if (jwtUtil.validateToken(token)) {
+                System.out.println(email + " - " + role + ", is valid");
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         email,
                         null,
-                        Collections.singletonList(new SimpleGrantedAuthority(role))
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_"+role))
                 );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+
+        filterChain.doFilter(request, response);
     }
 }
